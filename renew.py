@@ -31,8 +31,67 @@ def renew(username, password):
             # Click the login button
             page.click('button')
 
-            # Wait for the 'Borrow' page to load and navigate
-            page.goto('https://licenseportal.it.chula.ac.th/Home/Borrow')
+            # After clicking login, some accounts redirect through Microsoft login.
+            # Wait for either the Borrow page or a Microsoft login page and handle both.
+            try:
+                # short wait for direct redirect to Borrow
+                page.wait_for_url("**/Home/Borrow", timeout=5000)
+            except:
+                # If MS login appears, handle it
+                if ("login.microsoftonline.com" in page.url
+                        or page.query_selector("input[name='loginfmt']")
+                        or page.query_selector("input[type='email']")):
+                    # Enter email/username
+                    try:
+                        if page.query_selector("input[name='loginfmt']"):
+                            page.fill("input[name='loginfmt']", username)
+                        elif page.query_selector("input[type='email']"):
+                            page.fill("input[type='email']", username)
+                        # click next/submit
+                        if page.query_selector("#idSIButton9"):
+                            page.click("#idSIButton9")
+                        else:
+                            # fallback to submit buttons
+                            page.click("input[type='submit'], button[type='submit']")
+                    except Exception:
+                        pass
+
+                    # Wait for password field
+                    try:
+                        page.wait_for_selector("input[name='passwd'], input[type='password']", timeout=7000)
+                        if page.query_selector("input[name='passwd']"):
+                            page.fill("input[name='passwd']", password)
+                        else:
+                            page.fill("input[type='password']", password)
+                        # submit password
+                        if page.query_selector("#idSIButton9"):
+                            page.click("#idSIButton9")
+                        else:
+                            page.click("input[type='submit'], button[type='submit']")
+                    except Exception:
+                        pass
+
+                    # Handle "Stay signed in?" prompt if it appears
+                    try:
+                        page.wait_for_selector("#idBtn_Back, #idBtn_Accept, button:text('Yes'), button:text('No')", timeout=5000)
+                        if page.query_selector("#idBtn_Back"):
+                            page.click("#idBtn_Back")  # usually "No"
+                        elif page.query_selector("button:text('No')"):
+                            page.click("button:text('No')")
+                        elif page.query_selector("#idBtn_Accept"):
+                            page.click("#idBtn_Accept")
+                    except Exception:
+                        pass
+
+                    # Wait for redirect back to the license portal (give it some time)
+                    try:
+                        page.wait_for_url("**licenseportal.it.chula.ac.th**", timeout=15000)
+                    except Exception:
+                        pass
+
+            # Ensure we are on the Borrow page (navigate if needed)
+            if not page.url.endswith('/Home/Borrow'):
+                page.goto('https://licenseportal.it.chula.ac.th/Home/Borrow')
 
             # Wait for expiry date field to load
             page.wait_for_selector('#ExpiryDateStr')
