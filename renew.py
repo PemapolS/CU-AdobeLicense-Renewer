@@ -96,8 +96,8 @@ def renew(username, password):
             # Wait for expiry date field to load
             page.wait_for_selector('#ExpiryDateStr')
 
-            # Set the expiry date to 7 days from today
-            week = datetime.now() + timedelta(days=7)
+            # Set the expiry date to 6 days from today
+            week = datetime.now() + timedelta(days=6)
             page.fill('#ExpiryDateStr', week.strftime('%d/%m/%Y'))
 
             # Remove any unnecessary datepicker elements ('.dtp') which may block the Save button
