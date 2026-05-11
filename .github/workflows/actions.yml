@@ -1,7 +1,7 @@
 name: renew
 on:
   schedule:
-    - cron: '30 11 * * 1' # Every Monday at 11:30 AM
+    - cron: '30 11 * * 0,1,4' # Sun, Mon, Thu at 11:30 AM UTC (every ~3 days; borrow cap is 6 days)
   workflow_dispatch:
 
 jobs:
